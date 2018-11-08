@@ -2,7 +2,7 @@
 
 ### Description
 
-Subvol is a simple tool for btrfs subvolumes and snapshots.
+Subvol is a simple tool for BTRFS subvolumes and snapshots.
 
 ### How to use
 
