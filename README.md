@@ -23,6 +23,6 @@ Subvol is a simple tool for BTRFS subvolumes and snapshots.
 
 The subvolumes and snapshots are organized in the folowing directories:
 
-/var/subvol
-/var/subvol/subvolumes
-/var/subvol/snapshots
+- /var/subvol
+- /var/subvol/subvolumes
+- /var/subvol/snapshots
