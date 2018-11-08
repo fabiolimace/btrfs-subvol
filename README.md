@@ -18,3 +18,11 @@ Subvol is a simple tool for BTRFS subvolumes and snapshots.
 - subvol struct help
 - subvol struct check
 - subvol struct init
+
+### Structure
+
+The subvolumes and snapshots are organized in the folowing directories:
+
+/var/subvol
+/var/subvol/subvolumes
+/var/subvol/snapshots
