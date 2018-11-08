@@ -10,8 +10,6 @@ Subvol is a simple tool to use btrfs subvolumes and snapshots.
 - subvol list
 - subvol create SUBVOLUME
 - subvol delete SUBVOLUME
-- subvol snapshot [list|create|delete|rollback|help]
-- subvol struct [check|init|help]
 - subvol snapshot help
 - subvol snapshot list SUBVOLUME
 - subvol snapshot create SUBVOLUME [HINT]
