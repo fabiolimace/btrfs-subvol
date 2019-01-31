@@ -60,6 +60,8 @@ function subvol_create {
 	fi;
 
 	SUBVOLUME_PATH="${SUBVOLUMES_BASE_DIR}/${SUBVOLUME_NAME}";
+	SNAPSHOT_PATH="${SNAPSHOTS_BASE_DIR}/${SUBVOLUME_NAME}";
+
 	if [[ -d "${SUBVOLUME_PATH}" ]];
 	then
 		echo "Subvolume '${SUBVOLUME_PATH}' exists.";
@@ -68,8 +70,12 @@ function subvol_create {
 	fi;
 
 	CMD_CREATE_SUBVOLUME="sudo btrfs subvolume create '${SUBVOLUME_PATH}'";
-	echo "${CMD_CREATE_SUBVOLUME}";
-	bash -c "${CMD_CREATE_SUBVOLUME}";
+	CMD_CREATE_SNAPSHOTS_DIR="sudo mkdir --parents --verbose '${SNAPSHOT_PATH}'";
+	
+	echo "${CMD_CREATE_SUBVOLUME} && \\";
+	echo "${CMD_CREATE_SNAPSHOTS_DIR}";
+
+	bash -c "${CMD_CREATE_SUBVOLUME}" && bash -c "${CMD_CREATE_SNAPSHOTS_DIR}";
 }
 
 function subvol_delete {
@@ -93,7 +99,7 @@ function subvol_delete {
 	fi;
 
 	SNAPSHOTS_SUBDIR="${SNAPSHOTS_BASE_DIR}/${SUBVOLUME_NAME}";
-	BACKUP_NAME="${SUBVOLUME_NAME}_${SNAPSHOT_INSTANT}_backup";
+	BACKUP_NAME="${SUBVOLUME_NAME}_${SNAPSHOT_INSTANT}_deleted";
 
 	# Make backup of the subvolume before removing it
 	CMD_BACKUP_SUBVOLUME="sudo btrfs subvolume snapshot -r '${SUBVOLUME_PATH}' '${SNAPSHOTS_SUBDIR}/${BACKUP_NAME}'";
