@@ -13,8 +13,8 @@ Subvol is a simple tool for BTRFS subvolumes and snapshots.
 - subvol snapshot help
 - subvol snapshot list SUBVOLUME
 - subvol snapshot create SUBVOLUME [HINT]
-- subvol snapshot delete SUBVOLUME SNAPSHOT|NUMBER
-- subvol snapshot rollback SUBVOLUME SNAPSHOT|NUMBER
+- subvol snapshot delete SUBVOLUME [SNAPSHOT|NUMBER]
+- subvol snapshot rollback SUBVOLUME [SNAPSHOT|NUMBER]
 - subvol struct help
 - subvol struct check
 - subvol struct init
