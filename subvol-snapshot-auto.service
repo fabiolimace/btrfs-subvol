@@ -1,0 +1,11 @@
+[Unit]
+Description=Automatic snapshots of btrfs subvolumes on '/subvol/subvolumes'
+Requires=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash -c "/usr/local/bin/subvol-snapshot-all auto"
+
+[Install]
+WantedBy=multi-user.target
+
