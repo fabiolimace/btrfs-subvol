@@ -29,16 +29,18 @@ The subvolumes and snapshots are organized in the folowing directories:
 
 ### Automatic snapshot on boot
 
-1. Copy the script `subvol-snapshot-auto.service` to the `systemd` directory
+Execute these steps to enable automatic snapshots on boot.
+
+1. Copy the service script to `/etc/systemd/system`:
 
 ```bash
-cp 'subvol-snapshot-auto.service' to '/etc/systemd/system/'
+sudo cp 'subvol-snapshot-auto.service' '/etc/systemd/system/'
 ```
 
-2. Enable the new service
+2. Enable the service script:
 
 ```bash
-systemctl enable subvol-snapshot-auto.service
+sudo systemctl enable subvol-snapshot-auto.service
 ```
 
 // The end
