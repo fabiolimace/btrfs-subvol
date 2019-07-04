@@ -27,7 +27,23 @@ The subvolumes and snapshots are organized in the folowing directories:
 - /subvol/subvolumes
 - /subvol/snapshots
 
-### Automatic snapshot on boot
+### Installation
+
+1. Copy the script `subvol` to `/usr/local/bin/`
+
+```bash
+sudo cp 'subvol' '/usr/local/bin/';
+sudo chmod +x '/usr/local/bin/subvol';
+```
+
+2. Copy the script `subvol-snapshot-all` to `/usr/local/bin/`
+
+```bash
+sudo cp 'subvol-snapshot-all' '/usr/local/bin/';
+sudo chmod +x '/usr/local/bin/subvol-snapshot-all';
+```
+
+### Automatic snapshot on system boot
 
 Execute these steps to enable automatic snapshots on boot.
 
