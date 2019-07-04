@@ -20,7 +20,7 @@ SUBVOLUMES_BASE_DIR="${SUBVOL_BASE_DIR}/${SUBVOLUMES_LABEL}";
 SNAPSHOTS_BASE_DIR="${SUBVOL_BASE_DIR}/${SNAPSHOTS_LABEL}";
 
 function request_sudo {
-    sudo echo -n
+	sudo echo -n
 }
 
 function snapshot_instant {
@@ -41,7 +41,7 @@ function subvol_list {
 
 	REGEXP="^.*${SUBVOLUMES_LABEL}\/";
 
-    CMD_LIST_SUBVOLUMES="sudo btrfs subvolume list --sort=path '${SUBVOLUMES_BASE_DIR}' | grep '${REGEXP}' | sed 's/${REGEXP}/- /'"
+	CMD_LIST_SUBVOLUMES="sudo btrfs subvolume list --sort=path '${SUBVOLUMES_BASE_DIR}' | grep '${REGEXP}' | sed 's/${REGEXP}/- /'"
 
 	echo "Available subvolumes:";
 	bash -c "${CMD_LIST_SUBVOLUMES}";
@@ -71,7 +71,7 @@ function subvol_create {
 
 	CMD_CREATE_SUBVOLUME="sudo btrfs subvolume create '${SUBVOLUME_PATH}'";
 	CMD_CREATE_SNAPSHOTS_DIR="sudo mkdir --parents --verbose '${SNAPSHOT_PATH}'";
-	
+
 	echo "${CMD_CREATE_SUBVOLUME} && \\";
 	echo "${CMD_CREATE_SNAPSHOTS_DIR}";
 
@@ -126,7 +126,7 @@ function subvol_snapshot_list {
 
 	REGEXP="^.*${SNAPSHOTS_LABEL}\/${SUBVOLUME_NAME}\/";
 
-    CMD_LIST_SNAPSHOTS="sudo btrfs subvolume list -s --sort=path '${SNAPSHOTS_BASE_DIR}' | grep '${REGEXP}' | sed 's/${REGEXP}/- /'"
+	CMD_LIST_SNAPSHOTS="sudo btrfs subvolume list -s --sort=path '${SNAPSHOTS_BASE_DIR}' | grep '${REGEXP}' | sed 's/${REGEXP}//' | nl -w5 "
 
 	echo "Available snapshots for '${SUBVOLUME_NAME}':";
 	bash -c "${CMD_LIST_SNAPSHOTS}";
@@ -166,9 +166,9 @@ function subvol_snapshot_create {
 	SNAPSHOTS_SUBDIR="${SNAPSHOTS_BASE_DIR}/${SUBVOLUME_NAME}";
 	if [[ ! -d "${SNAPSHOTS_SUBDIR}" ]];
 	then
-        CMD_CREATE_SNAPSHOTS_SUBDIR="sudo mkdir '${SNAPSHOTS_SUBDIR}'";
-        echo "${CMD_CREATE_SNAPSHOTS_SUBDIR}";
-        bash -c "${CMD_CREATE_SNAPSHOTS_SUBDIR}";
+		CMD_CREATE_SNAPSHOTS_SUBDIR="sudo mkdir '${SNAPSHOTS_SUBDIR}'";
+		echo "${CMD_CREATE_SNAPSHOTS_SUBDIR}";
+		bash -c "${CMD_CREATE_SNAPSHOTS_SUBDIR}";
 	fi;
 
 	CMD_CREATE_SNAPSHOT="sudo btrfs subvolume snapshot -r '${SUBVOLUME_PATH}' '${SNAPSHOTS_SUBDIR}/${SNAPSHOT_NAME}'"
@@ -198,9 +198,14 @@ function subvol_snapshot_delete {
 		return;
 	fi;
 
+	if [[ "${SNAPSHOT_NAME}" =~ ^[0-9]+$ ]];
+	then
+		SNAPSHOT_NAME=`subvol_snapshot_find ${SUBVOLUME_NAME} ${SNAPSHOT_NAME}`;
+	fi;
+
 	if [[ -z "${SNAPSHOT_NAME}" ]];
 	then
-		echo "No snapshot name.";
+		echo "No snapshot name or number.";
 		subvol_snapshot_list "${SUBVOLUME_NAME}";
 		return;
 	fi;
@@ -213,10 +218,11 @@ function subvol_snapshot_delete {
 		return;
 	fi;
 
+	echo "Snapshot name: '${SNAPSHOT_NAME}'";
 	CMD_DELETE_SNAPSHOT="sudo btrfs subvolume delete '${SNAPSHOT_PATH}'"
 
 	echo "${CMD_DELETE_SNAPSHOT}";
-	
+
 	ask_continue
 	bash -c "${CMD_DELETE_SNAPSHOT}";
 }
@@ -242,9 +248,14 @@ function subvol_snapshot_rollback {
 		return;
 	fi;
 
+	if [[ "${SNAPSHOT_NAME}" =~ ^[0-9]+$ ]];
+	then
+		SNAPSHOT_NAME=`subvol_snapshot_find ${SUBVOLUME_NAME} ${SNAPSHOT_NAME}`;
+	fi;
+
 	if [[ -z "${SNAPSHOT_NAME}" ]];
 	then
-		echo "No snapshot name.";
+		echo "No snapshot name or number.";
 		subvol_snapshot_list "${SUBVOLUME_NAME}";
 		return;
 	fi;
@@ -258,7 +269,7 @@ function subvol_snapshot_rollback {
 	fi;
 
 	SNAPSHOTS_SUBDIR="${SNAPSHOTS_BASE_DIR}/${SUBVOLUME_NAME}";
-	BACKUP_NAME="${SUBVOLUME_NAME}_${SNAPSHOT_INSTANT}_backup";
+	BACKUP_NAME="${SUBVOLUME_NAME}_${SNAPSHOT_INSTANT}_rollback";
 
 	# Make backup of the subvolume before removing it
 	CMD_BACKUP_SUBVOLUME="sudo btrfs subvolume snapshot -r '${SUBVOLUME_PATH}' '${SNAPSHOTS_SUBDIR}/${BACKUP_NAME}'";
@@ -269,6 +280,7 @@ function subvol_snapshot_rollback {
 	# Rollback the snapshot
 	CMD_ROLLBACK_SNAPSHOT="sudo btrfs subvolume snapshot '${SNAPSHOTS_SUBDIR}/${SNAPSHOT_NAME}' '${SUBVOLUME_PATH}'"
 
+	echo "Snapshot name: '${SNAPSHOT_NAME}'";
 	echo "${CMD_BACKUP_SUBVOLUME} && \\";
 	echo "${CMD_DELETE_SUBVOLUME} && \\";
 	echo "${CMD_ROLLBACK_SNAPSHOT}";
@@ -278,58 +290,66 @@ function subvol_snapshot_rollback {
 
 }
 
+function subvol_snapshot_find {
+
+	SUBVOLUME_NAME="${1}";
+	SNAPSHOT_NUMBER="${2}";
+
+	subvol_snapshot_list "${SUBVOLUME_NAME}" | grep "^\s*${SNAPSHOT_NUMBER}\s${SUBVOLUME_NAME}" | sed "s/^\s*${SNAPSHOT_NUMBER}\s//";
+}
+
 function subvol_struct_init {
 
-    if [[ ! -d "${SUBVOL_BASE_DIR}" ]];
-    then
-        echo "Create directory '${SUBVOL_BASE_DIR}':"
-        CMD_MKDIR_SUBVOL="sudo mkdir ${SUBVOL_BASE_DIR}"
-        echo "${CMD_MKDIR_SUBVOL}"
-        bash -c "${CMD_MKDIR_SUBVOL}"
-    else
-        echo "Directory '${SUBVOL_BASE_DIR}' exists."
-    fi;
-    
-    if [[ ! -d "${SUBVOLUMES_BASE_DIR}" ]];
-    then
-        echo "Create directory '${SUBVOLUMES_BASE_DIR}':"
-        CMD_MKDIR_SUBVOLUMES="sudo mkdir ${SUBVOLUMES_BASE_DIR}"
-        echo "${CMD_MKDIR_SUBVOLUMES}"
-        bash -c "${CMD_MKDIR_SUBVOLUMES}"
-    else
-        echo "Directory '${SUBVOLUMES_BASE_DIR}' exists."
-    fi;
+	if [[ ! -d "${SUBVOL_BASE_DIR}" ]];
+	then
+		echo "Create directory '${SUBVOL_BASE_DIR}':"
+		CMD_MKDIR_SUBVOL="sudo mkdir ${SUBVOL_BASE_DIR}"
+		echo "${CMD_MKDIR_SUBVOL}"
+		bash -c "${CMD_MKDIR_SUBVOL}"
+	else
+		echo "Directory '${SUBVOL_BASE_DIR}' exists."
+	fi;
 
-    if [[ ! -d "${SNAPSHOTS_BASE_DIR}" ]];
-    then
-        echo "Create directory '${SNAPSHOTS_BASE_DIR}':"
-        CMD_MKDIR_SNAPSHOTS="sudo mkdir ${SNAPSHOTS_BASE_DIR}"
-        echo "${CMD_MKDIR_SNAPSHOTS}"
-        bash -c "${CMD_MKDIR_SNAPSHOTS}"
-    else
-        echo "Directory '${SNAPSHOTS_BASE_DIR}' exists."
-    fi;
+	if [[ ! -d "${SUBVOLUMES_BASE_DIR}" ]];
+	then
+		echo "Create directory '${SUBVOLUMES_BASE_DIR}':"
+		CMD_MKDIR_SUBVOLUMES="sudo mkdir ${SUBVOLUMES_BASE_DIR}"
+		echo "${CMD_MKDIR_SUBVOLUMES}"
+		bash -c "${CMD_MKDIR_SUBVOLUMES}"
+	else
+		echo "Directory '${SUBVOLUMES_BASE_DIR}' exists."
+	fi;
+
+	if [[ ! -d "${SNAPSHOTS_BASE_DIR}" ]];
+	then
+		echo "Create directory '${SNAPSHOTS_BASE_DIR}':"
+		CMD_MKDIR_SNAPSHOTS="sudo mkdir ${SNAPSHOTS_BASE_DIR}"
+		echo "${CMD_MKDIR_SNAPSHOTS}"
+		bash -c "${CMD_MKDIR_SNAPSHOTS}"
+	else
+		echo "Directory '${SNAPSHOTS_BASE_DIR}' exists."
+	fi;
 }
 
 function subvol_struct_check {
 
-    if [[ ! -d "${SUBVOL_BASE_DIR}" ]];
-    then
-        echo "Directory '${SUBVOL_BASE_DIR}' not found"
-	    exit 0;
-    fi;
-    
-    if [[ ! -d "${SUBVOLUMES_BASE_DIR}" ]];
-    then
-        echo "Directory '${SUBVOLUMES_BASE_DIR}' not found"
-	    exit 0;
-    fi;
+	if [[ ! -d "${SUBVOL_BASE_DIR}" ]];
+	then
+		echo "Directory '${SUBVOL_BASE_DIR}' not found"
+		exit 0;
+	fi;
 
-    if [[ ! -d "${SNAPSHOTS_BASE_DIR}" ]];
-    then
-        echo "Directory '${SNAPSHOTS_BASE_DIR}' not found"
-	    exit 0;
-    fi;
+	if [[ ! -d "${SUBVOLUMES_BASE_DIR}" ]];
+	then
+		echo "Directory '${SUBVOLUMES_BASE_DIR}' not found"
+		exit 0;
+	fi;
+
+	if [[ ! -d "${SNAPSHOTS_BASE_DIR}" ]];
+	then
+		echo "Directory '${SNAPSHOTS_BASE_DIR}' not found"
+		exit 0;
+	fi;
 }
 
 function subvol_help {
@@ -347,8 +367,8 @@ function subvol_snapshot_help {
 	echo "- subvol snapshot help"
 	echo "- subvol snapshot list SUBVOLUME"
 	echo "- subvol snapshot create SUBVOLUME [HINT]"
-	echo "- subvol snapshot delete SUBVOLUME SNAPSHOT"
-	echo "- subvol snapshot rollback SUBVOLUME SNAPSHOT"
+	echo "- subvol snapshot delete SUBVOLUME [SNAPSHOT|NUMBER]"
+	echo "- subvol snapshot rollback SUBVOLUME [SNAPSHOT|NUMBER]"
 }
 
 function subvol_struct_help {
@@ -397,7 +417,7 @@ function main {
 
 	if [[ "${COMMAND}" == "snapshot" ]];
 	then
-		
+
 		SUBCOMMAND="${2}";
 
 		if [[ -z "${SUBCOMMAND}" ]];
