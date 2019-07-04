@@ -27,6 +27,8 @@ The subvolumes and snapshots are organized in the folowing directories:
 - /subvol/subvolumes
 - /subvol/snapshots
 
+Note that by default the structure is on the file system root. You can change the variable `SUBVOL_BASE_DIR` to use another directory.
+
 ### Installation
 
 1. Copy the script `subvol` to `/usr/local/bin/`
@@ -41,6 +43,12 @@ sudo chmod +x '/usr/local/bin/subvol';
 ```bash
 sudo cp 'subvol-snapshot-all' '/usr/local/bin/';
 sudo chmod +x '/usr/local/bin/subvol-snapshot-all';
+```
+
+3. Initiate the `subvol` structure on `/subvol` directory
+
+```bash
+subvol struct init
 ```
 
 ### Automatic snapshot on system boot
