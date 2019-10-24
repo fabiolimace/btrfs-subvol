@@ -18,6 +18,7 @@ Subvol is a simple tool for BTRFS subvolumes and snapshots.
 - subvol struct help
 - subvol struct check
 - subvol struct init
+- subvol free
 
 ### Structure
 
