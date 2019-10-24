@@ -352,6 +352,14 @@ function subvol_struct_check {
 	fi;
 }
 
+function subvol_free {
+
+	CMD_FREE="sudo btrfs balance start -dusage=0 '${SUBVOL_BASE_DIR}'"
+
+	echo "${CMD_FREE}";
+	bash -c "${CMD_FREE}";
+}
+
 function subvol_help {
 	echo "How to use:"
 	echo "- subvol help"
@@ -360,6 +368,7 @@ function subvol_help {
 	echo "- subvol delete SUBVOLUME"
 	echo "- subvol snapshot [list|create|delete|rollback|help]"
 	echo "- subvol struct [check|init|help]"
+	echo "- subvol free"
 }
 
 function subvol_snapshot_help {
@@ -497,6 +506,12 @@ function main {
 		subvol_struct_help;
 		exit 0;
 
+	fi;
+
+	if [[ "${COMMAND}" == "free" ]];
+	then
+		subvol_free;
+		exit 0;
 	fi;
 
 	subvol_help;
