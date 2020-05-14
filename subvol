@@ -178,6 +178,17 @@ function subvol_snapshot_create {
 
 }
 
+function subvol_snapshot_create_all {
+
+	SNAPSHOT_HINT=${1}
+	
+	for file in $(find "${SUBVOLUMES_BASE_DIR}"/* -maxdepth 0 -type d);
+	do
+		SUBVOLUME=$(basename "${file}");
+		subvol_snapshot_create "${SUBVOLUME}" "${SNAPSHOT_HINT}";
+	done;
+}
+
 function subvol_snapshot_delete {
 
 	SUBVOLUME_NAME="${1}";
@@ -375,7 +386,7 @@ function subvol_snapshot_help {
 	echo "How to use:"
 	echo "- subvol snapshot help"
 	echo "- subvol snapshot list SUBVOLUME"
-	echo "- subvol snapshot create SUBVOLUME [HINT]"
+	echo "- subvol snapshot create [SUBVOLUME|all] [HINT]"
 	echo "- subvol snapshot delete SUBVOLUME [SNAPSHOT|NUMBER]"
 	echo "- subvol snapshot rollback SUBVOLUME [SNAPSHOT|NUMBER]"
 }
@@ -451,7 +462,13 @@ function main {
 		then
 			SUBVOLUME_NAME="${3}";
 			SNAPSHOT_HINT="${4}";
-			subvol_snapshot_create "${SUBVOLUME_NAME}" "${SNAPSHOT_HINT}";
+			
+			if [[ "${SUBVOLUME_NAME}" == "all" ]];
+			then
+				subvol_snapshot_create_all "${SNAPSHOT_HINT}";
+			else
+				subvol_snapshot_create "${SUBVOLUME_NAME}" "${SNAPSHOT_HINT}";
+			fi;
 			exit 0;
 		fi;
 

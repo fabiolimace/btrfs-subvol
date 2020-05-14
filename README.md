@@ -12,7 +12,7 @@ Subvol is a simple tool for BTRFS subvolumes and snapshots.
 - subvol delete SUBVOLUME
 - subvol snapshot help
 - subvol snapshot list SUBVOLUME
-- subvol snapshot create SUBVOLUME [HINT]
+- subvol snapshot create [SUBVOLUME|all] [HINT]
 - subvol snapshot delete SUBVOLUME [SNAPSHOT|NUMBER]
 - subvol snapshot rollback SUBVOLUME [SNAPSHOT|NUMBER]
 - subvol struct help
@@ -39,14 +39,7 @@ sudo cp 'subvol' '/usr/local/bin/';
 sudo chmod +x '/usr/local/bin/subvol';
 ```
 
-2. Copy the script `subvol-snapshot-all` to `/usr/local/bin/`
-
-```bash
-sudo cp 'subvol-snapshot-all' '/usr/local/bin/';
-sudo chmod +x '/usr/local/bin/subvol-snapshot-all';
-```
-
-3. Initiate the `subvol` structure on `/subvol` directory
+2. Initiate the `subvol` structure on `/subvol` directory
 
 ```bash
 subvol struct init
