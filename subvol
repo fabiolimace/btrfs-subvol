@@ -200,26 +200,26 @@ function subvol_snapshot_delete {
 		subvol_list;
 		return;
 	fi;
-
-	SUBVOLUME_PATH="${SUBVOLUMES_BASE_DIR}/${SUBVOLUME_NAME}";
-	if [[ ! -d "${SUBVOLUME_PATH}" ]];
-	then
-		echo "Subvolume '${SUBVOLUME_NAME}' not found.";
-		subvol_list;
-		return;
-	fi;
-
-	if [[ "${SNAPSHOT_NAME}" =~ ^[0-9]+$ ]];
-	then
-		SNAPSHOT_NAME=`subvol_snapshot_find ${SUBVOLUME_NAME} ${SNAPSHOT_NAME}`;
-	fi;
-
+	
 	if [[ -z "${SNAPSHOT_NAME}" ]];
 	then
-		echo "No snapshot name or number.";
+		echo "No snapshot name.";
 		subvol_snapshot_list "${SUBVOLUME_NAME}";
 		return;
 	fi;
+
+	if [[ "${SNAPSHOT_NAME}" =~ ^[0-9]+(-[0-9]+)?$ ]];
+	then
+		subvol_snapshot_delete_by_range ${SUBVOLUME_NAME} ${SNAPSHOT_NAME};
+	else
+		subvol_snapshot_delete_by_name "${SUBVOLUME_NAME}" "${SNAPSHOT_NAME}";
+	fi;
+}
+
+function subvol_snapshot_delete_by_name {
+
+	SUBVOLUME_NAME="${1}";
+	SNAPSHOT_NAME="${2}";
 
 	SNAPSHOT_PATH="${SNAPSHOTS_BASE_DIR}/${SUBVOLUME_NAME}/${SNAPSHOT_NAME}";
 	if [[ ! -d "${SNAPSHOT_PATH}" ]];
@@ -229,13 +229,54 @@ function subvol_snapshot_delete {
 		return;
 	fi;
 
-	echo "Snapshot name: '${SNAPSHOT_NAME}'";
-	CMD_DELETE_SNAPSHOT="sudo btrfs subvolume delete '${SNAPSHOT_PATH}'"
-
-	echo "${CMD_DELETE_SNAPSHOT}";
+	echo "Snapshot to delete: '${SNAPSHOT_NAME}'";
 
 	ask_continue
+	
+	CMD_DELETE_SNAPSHOT="sudo btrfs subvolume delete '${SNAPSHOT_PATH}'"
+	echo "${CMD_DELETE_SNAPSHOT}";
 	bash -c "${CMD_DELETE_SNAPSHOT}";
+}
+
+function subvol_snapshot_delete_by_range {
+
+	SUBVOLUME_NAME="${1}";
+	SNAPSHOT_NAME="${2}";
+
+	if [[ "${SNAPSHOT_NAME}" =~ ^[0-9]+(-[0-9]+)?$ ]];
+	then
+		SNAPSHOT_NAME=`subvol_snapshot_find_range ${SUBVOLUME_NAME} ${SNAPSHOT_NAME}`;
+	fi;
+
+	if [[ -z "${SNAPSHOT_NAME}" ]];
+	then
+		echo "Snapshot not found.";
+		subvol_snapshot_list "${SUBVOLUME_NAME}";
+		return;
+	fi;
+
+	echo "Snapshots to delete:";
+	echo "${SNAPSHOT_NAME}" | while read line;
+	do
+		echo " - ${line}";
+	done;
+
+	ask_continue
+	
+	echo "${SNAPSHOT_NAME}" | while read line;
+	do
+		SNAPSHOT_PATH="${SNAPSHOTS_BASE_DIR}/${SUBVOLUME_NAME}/${line}";
+		if [[ ! -d "${SNAPSHOT_PATH}" ]];
+		then
+			echo "Snapshot '${SNAPSHOT_PATH}' not found.";
+			subvol_snapshot_list "${SUBVOLUME_NAME}";
+			return;
+		fi;
+		
+		CMD_DELETE_SNAPSHOT="sudo btrfs subvolume delete '${SNAPSHOT_PATH}'"
+		echo "${CMD_DELETE_SNAPSHOT}";
+		bash -c "${CMD_DELETE_SNAPSHOT}";
+	done;
 }
 
 function subvol_snapshot_rollback {
@@ -307,6 +348,22 @@ function subvol_snapshot_find {
 	SNAPSHOT_NUMBER="${2}";
 
 	subvol_snapshot_list "${SUBVOLUME_NAME}" | grep "^\s*${SNAPSHOT_NUMBER}\s${SUBVOLUME_NAME}" | sed "s/^\s*${SNAPSHOT_NUMBER}\s//";
+}
+
+function subvol_snapshot_find_range {
+
+	SUBVOLUME_NAME="${1}";
+	SNAPSHOT_START="${2%-*}";
+	SNAPSHOT_END="${2#*-}";
+	
+	if [[ -z $SNAPSHOT_END ]]; then
+		SNAPSHOT_END=$SNAPSHOT_START;
+	fi;
+	
+	for i in `seq $SNAPSHOT_START $SNAPSHOT_END`;
+	do
+		subvol_snapshot_list "${SUBVOLUME_NAME}" | grep "^\s*${i}\s${SUBVOLUME_NAME}" | sed "s/^\s*${i}\s//";
+	done;
 }
 
 function subvol_struct_init {
@@ -387,7 +444,7 @@ function subvol_snapshot_help {
 	echo "- subvol snapshot help"
 	echo "- subvol snapshot list SUBVOLUME"
 	echo "- subvol snapshot create [SUBVOLUME|all] [HINT]"
-	echo "- subvol snapshot delete SUBVOLUME [SNAPSHOT|NUMBER]"
+	echo "- subvol snapshot delete SUBVOLUME [SNAPSHOT|NUMBER|RANGE]"
 	echo "- subvol snapshot rollback SUBVOLUME [SNAPSHOT|NUMBER]"
 }
 
